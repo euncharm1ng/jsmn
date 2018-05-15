@@ -32,7 +32,29 @@ char *readJsonFile(){
 		fclose(data);
 		return mystring;
 }
+void jsonNameList(const char *jsonstr, jsmntok_t *t, int tokcount){
+	char nameList[100][20];
+	int count=0;
 
+	int i;
+	for(i=0; i<tokcount; i++){
+		if(t[i].size>0&&t[i].type==JSMN_STRING){
+			strncpy(nameList[count],jsonstr + t[i].start, t[i].end-t[i].start );
+			count++;
+		}
+	}
+	printf("****name list ****\n");
+	for(i=0; i<count; i++){
+		printf("[NAME %2d] %s \n", i+1, nameList[i]);
+	}
+}
+void printtoken(const char *JSON_STRING, jsmntok_t *t, int count){
+	int i=0;
+	for(i=0; i<count; i++){
+	printf("index: [%2d] start&end{%d, %d} size <%d> type '%d' %.*s\n", i, t[i].start, t[i].end, t[i].size, t[i].type, t[i].end-t[i].start,
+			JSON_STRING + t[i].start);
+		}
+}
 int main() {
 	int i;
 	int r;
@@ -53,8 +75,10 @@ int main() {
 		printf("Object expected\n");
 		return 1;
 	}
-
+	//jsonNameList(JSON_STRING, t, r);
+	//printtoken(JSON_STRING, t, r);
 	/* Loop over all keys of the root object */
+
 	for (i = 1; i < r; i++) {
 		if (jsoneq(JSON_STRING, &t[i], "name") == 0) {
 			/* We may use strndup() to fetch string value */
@@ -87,5 +111,7 @@ int main() {
 				//	JSON_STRING + t[i].start);
 		}
 	}
+	jsonNameList(JSON_STRING, t, r);
+	//printtoken(JSON_STRING, t, r);
 	return EXIT_SUCCESS;
 }
