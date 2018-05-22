@@ -32,22 +32,46 @@ char *readJsonFile(){
 		fclose(data);
 		return mystring;
 }
-void jsonNameList(const char *jsonstr, jsmntok_t *t, int tokcount){
-	char nameList[100][20];
-	int count=0;
-
-	int i;
+void jsonNameList(const char *jsonstr, jsmntok_t *t, int tokcount, int *nameList){
+	int count=0, i;
 	for(i=0; i<tokcount; i++){
 		if(t[i].size>0&&t[i].type==JSMN_STRING){
-			strncpy(nameList[count],jsonstr + t[i].start, t[i].end-t[i].start );
+			nameList[count]=i;
 			count++;
 		}
 	}
+}
+
+void printNames(const char *JSON_STRING, jsmntok_t *t, int *nameList){
 	printf("****name list ****\n");
-	for(i=0; i<count; i++){
-		printf("[NAME %2d] %s \n", i+1, nameList[i]);
+	int i=0;
+	while(nameList[i]!=0){
+		printf("[--NAME %2d] %.*s \n", i+1, t[nameList[i]].end-t[nameList[i]].start,JSON_STRING + t[nameList[i]].start);
+		i++;
 	}
 }
+
+void selectNameList(const char *JSON_STRING, jsmntok_t *t, int *nameList){
+	int num=0;
+	do{
+		printf("Select Name's Number (0 to exit): ");
+		int tester=scanf("%d", &num);
+		if(tester==0||tester==EOF){
+			printf("pls input number\n");
+			char stringerror[20];
+			scanf("%s", stringerror);
+		}else if(num==0) ;
+		else if(nameList[num-1]==0||num<0){
+			printf("wrong index number\n");
+		}else{
+			int tokindex=nameList[num-1];
+			printf("[--NAME %2d] %.*s \n", num, t[tokindex].end-t[tokindex].start,JSON_STRING + t[tokindex].start);
+			printf("%.*s \n\n", t[tokindex+1].end-t[tokindex+1].start,JSON_STRING + t[tokindex+1].start);
+		}
+	}while(num!=0);
+	printf("parser terminated\n");
+}
+
 void printtoken(const char *JSON_STRING, jsmntok_t *t, int count){
 	int i=0;
 	for(i=0; i<count; i++){
@@ -60,6 +84,7 @@ int main() {
 	int r;
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+	int nameList[100]={0};
 
 	const char *JSON_STRING =	readJsonFile();
 
@@ -75,23 +100,31 @@ int main() {
 		printf("Object expected\n");
 		return 1;
 	}
+	
+	jsonNameList(JSON_STRING, t, r, nameList);
+	printNames(JSON_STRING,t, nameList);
+	selectNameList(JSON_STRING, t, nameList);
+	//printtoken(JSON_STRING, t, r);
+	return EXIT_SUCCESS;
+
+
 	//jsonNameList(JSON_STRING, t, r);
 	//printtoken(JSON_STRING, t, r);
 	/* Loop over all keys of the root object */
-
+/*
 	for (i = 1; i < r; i++) {
 		if (jsoneq(JSON_STRING, &t[i], "name") == 0) {
-			/* We may use strndup() to fetch string value */
+
 			printf("- name: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			i++;
 		} else if (jsoneq(JSON_STRING, &t[i], "keywords") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
+
 			printf("- keywords: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			i++;
 		} else if (jsoneq(JSON_STRING, &t[i], "description") == 0) {
-			/* We may want to do strtol() here to get numeric value */
+
 			printf("- UID: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			i++;
@@ -99,7 +132,7 @@ int main() {
 			int j;
 			printf("- examples:\n");
 			if (t[i+1].type != JSMN_ARRAY) {
-				continue; /* We expect groups to be an array of strings */
+				continue;
 			}
 			for (j = 0; j < t[i+1].size; j++) {
 				jsmntok_t *g = &t[i+j+2];
@@ -110,8 +143,6 @@ int main() {
 			//printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 				//	JSON_STRING + t[i].start);
 		}
-	}
-	jsonNameList(JSON_STRING, t, r);
-	//printtoken(JSON_STRING, t, r);
-	return EXIT_SUCCESS;
+	}*/
+
 }
