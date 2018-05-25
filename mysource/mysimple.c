@@ -66,7 +66,7 @@ void selectNameList(const char *JSON_STRING, jsmntok_t *t, int *nameList){
 		}else{
 			int tokindex=nameList[num-1];
 			printf("[--NAME %2d] %.*s \n", num, t[tokindex].end-t[tokindex].start,JSON_STRING + t[tokindex].start);
-			printf("%.*s \n\n", t[tokindex+1].end-t[tokindex+1].start,JSON_STRING + t[tokindex+1].start);
+			printf("%.*s \n\n", t[tokindex+1].end-t[tokindex+1].start, JSON_STRING + t[tokindex+1].start);
 		}
 	}while(num!=0);
 	printf("parser terminated\n");
@@ -83,7 +83,7 @@ int main() {
 	int i;
 	int r;
 	jsmn_parser p;
-	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+	jsmntok_t t[128];
 	int nameList[100]={0};
 
 	const char *JSON_STRING =	readJsonFile();
@@ -95,54 +95,9 @@ int main() {
 		return 1;
 	}
 
-	/* Assume the top-level element is an object */
-	if (r < 1 || t[0].type != JSMN_OBJECT) {
-		printf("Object expected\n");
-		return 1;
-	}
-	
 	jsonNameList(JSON_STRING, t, r, nameList);
 	printNames(JSON_STRING,t, nameList);
 	selectNameList(JSON_STRING, t, nameList);
 	//printtoken(JSON_STRING, t, r);
 	return EXIT_SUCCESS;
-
-
-	//jsonNameList(JSON_STRING, t, r);
-	//printtoken(JSON_STRING, t, r);
-	/* Loop over all keys of the root object */
-/*
-	for (i = 1; i < r; i++) {
-		if (jsoneq(JSON_STRING, &t[i], "name") == 0) {
-
-			printf("- name: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "keywords") == 0) {
-
-			printf("- keywords: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "description") == 0) {
-
-			printf("- UID: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "examples") == 0) {
-			int j;
-			printf("- examples:\n");
-			if (t[i+1].type != JSMN_ARRAY) {
-				continue;
-			}
-			for (j = 0; j < t[i+1].size; j++) {
-				jsmntok_t *g = &t[i+j+2];
-				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
-			}
-			i += t[i+1].size + 1;
-		} else {
-			//printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
-				//	JSON_STRING + t[i].start);
-		}
-	}*/
-
 }
