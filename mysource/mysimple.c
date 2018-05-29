@@ -22,7 +22,7 @@ char *readJsonFile(){
 void jsonNameList(const char *jsonstr, jsmntok_t *t, int tokcount, int *nameList){
 	int count=0, i, counta=0;
 	for(i=0; i<tokcount; i++){
-		if(t[i].size>0&&t[i].type==JSMN_STRING){
+		if(t[i].size>0&&t[i].type==JSMN_STRING&&t[i].parent==0){
 			nameList=(int*)realloc(nameList, sizeof(int)*(count+2));
 			nameList[count]=i;
 			count++;
@@ -33,9 +33,9 @@ void jsonNameList(const char *jsonstr, jsmntok_t *t, int tokcount, int *nameList
 
 void printNames(const char *JSON_STRING, jsmntok_t *t, int *nameList){
 	printf("****name list ****\n");
-	int i=0;
+	int i=0, count=1;
 	while(nameList[i]!=0){
-		printf("[--NAME %2d] %.*s \n", i+1, t[nameList[i]].end-t[nameList[i]].start,JSON_STRING + t[nameList[i]].start);
+			printf("[--NAME %2d] %.*s \n", i+1, t[nameList[i]].end-t[nameList[i]].start,JSON_STRING + t[nameList[i]].start);
 		i++;
 	}
 }
@@ -59,7 +59,6 @@ void selectNameList(const char *JSON_STRING, jsmntok_t *t, int *nameList){
 			printf("%.*s \n\n", t[tokindex+1].end-t[tokindex+1].start, JSON_STRING + t[tokindex+1].start);
 		}
 	}while(num!=0);
-	printf("parser terminated\n");
 }
 
 
@@ -159,9 +158,7 @@ int main() {
 		return 1;
 	}
 	jsonNameList(JSON_STRING, t, r, nameList);
-	//selectNameList(JSON_STRING, t, nameList);
-	selectObjectList(JSON_STRING, t, nameList, r);
-	//t[0].type==JSMN_OBJECT? selectNameList(JSON_STRING, t, nameList): selectObjectList(JSON_STRING, t, objectList, nameList, r);
+	t[0].type==JSMN_OBJECT? selectNameList(JSON_STRING, t, nameList): selectObjectList(JSON_STRING, t, nameList, r);
 	//printtoken(JSON_STRING, t, r);
 	return EXIT_SUCCESS;
 }
