@@ -4,10 +4,13 @@
 #include "../jsmn.h"
 #include <assert.h>
 
-typedef struct{
-	int tokindex;
-	int objectindex;
-}nameTokenInfo;
+void printtoken(const char *JSON_STRING, jsmntok_t *t, int count){
+	int i=0;
+	for(i=0; i<count; i++){
+	printf("index: [%2d] start&end{%d, %d} size <%d> type '%d' parent==%d %.*s\n", i, t[i].start, t[i].end, t[i].size, t[i].type, t[i].parent, t[i].end-t[i].start,
+			JSON_STRING + t[i].start);
+		}
+}
 
 char *readJsonFile(){
 	char fileName[100];
@@ -121,6 +124,7 @@ void selectMenu(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList
 			char stringerror[20];
 			scanf("%s", stringerror);
 		}else if(num==0) ;
+		else if(num==999) printtoken(JSON_STRING, t, tokcount);
 		else if(Length<=num||num<0){
 			printf("wrong index number\n");
 		}else{
@@ -137,6 +141,36 @@ void selectMenu(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList
 	}while(num!=0);
 }
 
+int searchName(const char *JSON_STRING, jsmntok_t *t, int *List, int objNum, char *tag){
+	int i=0;
+	while(List[i]<objNum) i++;
+	while(1){
+		if(strncmp(tag, JSON_STRING+t[List[i]].start, t[List[i]].end-t[List[i]].start)==0) return List[i]+1;
+		i++;
+	}
+	return 0;
+}
+
+void pTable(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList, int tokcount){
+	printf("********************************************\n");
+	printf("번호\t제품명\t제조사\t가격\t개수\n");
+	printf("********************************************\n");
+	int i=0, j=0, num=1;
+	while(fieldList[i]!=0){
+		printf("%d\t", num++);
+		int nameIndex=searchName(JSON_STRING, t, List, fieldList[i], "name");
+		printf("%.*s\t", t[nameIndex].end-t[nameIndex].start, JSON_STRING + t[nameIndex].start);
+		int triggerEnd=fieldList[i+1]==0? tokcount: fieldList[i+1];
+		while(List[j]<triggerEnd&&List[j]!=0){
+			int tokIndex=List[j++]+1;
+			if(tokIndex==nameIndex) continue;
+			printf("%.*s\t", t[tokIndex].end-t[tokIndex].start, JSON_STRING + t[tokIndex].start);
+		}
+		printf("\n");
+		i++;
+	}
+}
+
 /*공간 절약을 위해 objectList를 이 함수에서 만든다. jsonObjectList()로 오브젝트의 어레이를 만들고 어레이의 길이를 받는다.
 	printObjects()로 메뉴(오브젝트의 첫번째 value)를 출력한다.
 	유저가 문자를 입력하거나 틀린 인덱스 번호를 입력할 수 있는 경우를 한 번 걸러준다.
@@ -147,6 +181,7 @@ void selectMenu(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList
 void selectObjectList(const char *JSON_STRING, jsmntok_t *t, int *List, int tokcount){
 	int *objectList=(int*)malloc(sizeof(int));
 	int objLength=jsonObjectList(JSON_STRING, t, tokcount, objectList);
+	pTable(JSON_STRING, t, List, objectList, tokcount);
 	printObjects(JSON_STRING, t, tokcount, objectList, List);
 	selectMenu(JSON_STRING, t, List, objectList, objLength, tokcount);
 }
@@ -156,14 +191,6 @@ void selectNameList(const char *JSON_STRING, jsmntok_t *t, int *List, int tokcou
 	int nameLength=jsonNameList(JSON_STRING, t, tokcount, nameList);
 	printNames(JSON_STRING,t, List);
 	selectMenu(JSON_STRING, t, List, nameList, nameLength, tokcount);
-}
-
-void printtoken(const char *JSON_STRING, jsmntok_t *t, int count){
-	int i=0;
-	for(i=0; i<count; i++){
-	printf("index: [%2d] start&end{%d, %d} size <%d> type '%d' parent==%d %.*s\n", i, t[i].start, t[i].end, t[i].size, t[i].type, t[i].parent, t[i].end-t[i].start,
-			JSON_STRING + t[i].start);
-		}
 }
 
 int main() {
