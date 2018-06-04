@@ -141,7 +141,7 @@ void selectMenu(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList
 	}while(num!=0);
 }
 
-int searchName(const char *JSON_STRING, jsmntok_t *t, int *List, int objNum, char *tag){
+int searchByName(const char *JSON_STRING, jsmntok_t *t, int *List, int objNum, char *tag){
 	int i=0;
 	while(List[i]<objNum) i++;
 	while(1){
@@ -151,14 +151,26 @@ int searchName(const char *JSON_STRING, jsmntok_t *t, int *List, int objNum, cha
 	return 0;
 }
 
+int totalPrice(const char *JSON_STRING, jsmntok_t *t, int *List, int objNum){
+	char price[10], count[10];
+	int priceIndex=searchByName(JSON_STRING, t, List, objNum, "price");
+	strncpy(price, JSON_STRING+t[priceIndex].start, t[priceIndex].end-t[priceIndex].start);
+	int priceValue=atoi(price);
+	int countIndex=searchByName(JSON_STRING, t, List, objNum, "count");
+	strncpy(count, JSON_STRING+t[countIndex].start, t[countIndex].end-t[countIndex].start);
+	int countValue=atoi(count);
+	return priceValue*countValue;
+}
+
 void pTable(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList, int tokcount){
-	printf("********************************************\n");
-	printf("번호\t제품명\t제조사\t가격\t개수\n");
-	printf("********************************************\n");
+	if(strncmp("Ramen", JSON_STRING+t[1].start, t[1].end-t[1].start)!=0) return;
+	printf("*************************************************\n");
+	printf("번호\t제품명\t제조사\t가격\t개수\t총가격\n");
+	printf("*************************************************\n");
 	int i=0, j=0, num=1;
 	while(fieldList[i]!=0){
 		printf("%d\t", num++);
-		int nameIndex=searchName(JSON_STRING, t, List, fieldList[i], "name");
+		int nameIndex=searchByName(JSON_STRING, t, List, fieldList[i], "name");
 		printf("%.*s\t", t[nameIndex].end-t[nameIndex].start, JSON_STRING + t[nameIndex].start);
 		int triggerEnd=fieldList[i+1]==0? tokcount: fieldList[i+1];
 		while(List[j]<triggerEnd&&List[j]!=0){
@@ -166,7 +178,8 @@ void pTable(const char *JSON_STRING, jsmntok_t *t, int *List, int *fieldList, in
 			if(tokIndex==nameIndex) continue;
 			printf("%.*s\t", t[tokIndex].end-t[tokIndex].start, JSON_STRING + t[tokIndex].start);
 		}
-		printf("\n");
+		int ttprice=totalPrice(JSON_STRING, t, List, fieldList[i]);
+		printf("%d\n", ttprice);
 		i++;
 	}
 }
